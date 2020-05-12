@@ -1,24 +1,8 @@
 import * as Yup from "yup";
-import Recipient from "../models/Recipients";
+import Recipient from "../models/Recipient";
 
 class RecipientController {
   async store(req, res) {
-    console.log(1);
-    const recipientExists = await Recipient.findOne({
-      where: { name: req.body.name }
-    });
-    console.log(2);
-
-    if (recipientExists) {
-      return res.status(400).json({ error: "Recipient already exists." });
-    }
-
-    const recipient = await Recipient.create(req.body);
-
-    return res.json(recipient);
-  }
-
-  async stor2(req, res) {
     const schema = Yup.object().shape({
       name: Yup.string().required(),
       email: Yup.string().required(),
@@ -34,13 +18,10 @@ class RecipientController {
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: "Validation fails" });
     }
-    console.log(1);
+
     const recipientExists = await Recipient.findOne({
       where: { email: req.body.email }
     });
-    console.log("2");
-
-    console.log(recipientExists);
 
     if (recipientExists) {
       return res.status(400).json({ erro: "Recipient already exists" });
@@ -58,6 +39,65 @@ class RecipientController {
       state,
       zip_code
     } = await Recipient.create(req.body);
+
+    return res.json({
+      id,
+      name,
+      email,
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
+      zip_code
+    });
+  }
+
+  async update(req, res) {
+    const schema = Yup.object().shape({
+      name: Yup.string(),
+      email: Yup.string(),
+      street: Yup.string(),
+      number: Yup.number(),
+      complement: Yup.string(),
+      neighborhood: Yup.string(),
+      city: Yup.string(),
+      state: Yup.string(),
+      zip_code: Yup.number()
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: "Validation fails" });
+    }
+
+    const recipient = await Recipient.findByPk(req.params.id);
+
+    if (!recipient) {
+      return res.status(400).json({ erro: "Recipient not exists" });
+    }
+
+    const { email } = req.body;
+    // se o usuario for trocar o email
+    if (email !== recipient.email) {
+      const recipientExists = await Recipient.findOne({ where: { email } });
+
+      if (recipientExists) {
+        return res.status(400).json({ error: "Recipient already exists" });
+      }
+    }
+
+    const {
+      id,
+      name,
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
+      zip_code
+    } = await recipient.update(req.body);
 
     return res.json({
       id,

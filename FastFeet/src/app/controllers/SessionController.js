@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 
 import User from "../models/User";
 import authConfig from "../../config/auth";
-import { aqua } from "color-name";
 
 class SessionController {
   async store(req, res) {
