@@ -4,6 +4,8 @@ import {
   setHours,
   setMinutes,
   setSeconds,
+  format,
+  isAfter,
 } from "date-fns";
 import Appointment from "../models/Appointment";
 import { Op } from "sequelize";
@@ -43,9 +45,23 @@ class AvailableController {
       "19:00",
     ];
 
-    const available = schedule.map((time) => {});
+    const available = schedule.map((time) => {
+      const [hour, minute] = time.split(":");
+      const value = setSeconds(
+        setMinutes(setHours(searchDate, hour), minute),
+        0
+      ); // transforma o conteudo do vetor em 2018-06-23 08:00:00
 
-    return res.json(appointments);
+      return {
+        time,
+        value: format(value, "yyyy-MM-dd'T'HH:mm:ssxx"),
+        available:
+          isAfter(value, new Date()) &&
+          !appointments.find((a) => format(a.date, "HH:mm") === time),
+      };
+    });
+
+    return res.json(available);
   }
 }
 
