@@ -1,5 +1,6 @@
 import * as Yup from "yup";
 import Recipient from "../models/Recipient";
+import User from "../models/User";
 
 class RecipientController {
   async store(req, res) {
@@ -17,6 +18,12 @@ class RecipientController {
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: "Validation fails" });
+    }
+
+    const user = await User.findByPk(req.userId);
+
+    if (!user.admin) {
+      return res.status(401).json({ error: "User is not a admin" });
     }
 
     const recipientExists = await Recipient.findOne({
@@ -79,7 +86,7 @@ class RecipientController {
 
     const { email } = req.body;
     // se o usuario for trocar o email
-    if (email !== recipient.email) {
+    if (email && email !== recipient.email) {
       const recipientExists = await Recipient.findOne({ where: { email } });
 
       if (recipientExists) {
