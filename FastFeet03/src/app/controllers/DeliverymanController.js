@@ -27,7 +27,8 @@ class DeliverymanController {
   async store(req, res) {
     const schema = Yup.object().shape({
       name: Yup.string().required(),
-      email: Yup.string().required()
+      email: Yup.string().required(),
+      avatar_id: Yup.number()
     });
 
     if (!(await schema.isValid(req.body))) {
@@ -48,23 +49,31 @@ class DeliverymanController {
       return res.status(400).json({ error: "Deliveryman already exists" });
     }
 
-    const { id, name, email } = await Deliveryman.create(req.body);
+    const { id, name, email, avatar_id } = await Deliveryman.create(req.body);
 
     return res.json({
       id,
       name,
-      email
+      email,
+      avatar_id
     });
   }
 
   async update(req, res) {
     const schema = Yup.object().shape({
       name: Yup.string(),
-      email: Yup.string()
+      email: Yup.string(),
+      avatar_id: Yup.number()
     });
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: "Validation fails" });
+    }
+
+    const user = await User.findByPk(req.userId);
+
+    if (!user.admin) {
+      return res.status(401).json({ error: "User is not a admin" });
     }
 
     const deliveryman = await Deliveryman.findByPk(req.params.id);
@@ -83,13 +92,33 @@ class DeliverymanController {
       }
     }
 
-    const { id, name } = await deliveryman.update(req.body);
+    const { id, name, avatar_id } = await deliveryman.update(req.body);
 
     return res.json({
       id,
       name,
-      email
+      email,
+      avatar_id
     });
+  }
+
+  async delete(req, res) {
+    const user = await User.findByPk(req.userId);
+
+    if (!user.admin) {
+      return res.status(401).json({ error: "User is not a admin" });
+    }
+
+    const { id } = req.params;
+    const deliverymanExists = await Deliveryman.findByPk(id);
+
+    if (!deliverymanExists) {
+      return res.status(400).json({ error: "Deliveryman does not exists" });
+    }
+
+    await Deliveryman.destroy({ where: { id } });
+
+    return res.status(200).json();
   }
 }
 

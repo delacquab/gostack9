@@ -13,7 +13,7 @@ class Mail {
       host,
       port,
       secure,
-      auth: auth.user ? auth : null,
+      auth: auth.user ? auth : null
     });
 
     this.configureTemplates();
@@ -29,10 +29,10 @@ class Mail {
           layoutsDir: resolve(viewPath, "layouts"),
           partialsDir: resolve(viewPath, "partials"),
           defaultLayout: "default",
-          extname: ".hbs",
+          extname: ".hbs"
         }),
         viewPath,
-        extName: ".hbs",
+        extName: ".hbs"
       })
     );
   }
@@ -40,7 +40,7 @@ class Mail {
   sendMail(message) {
     return this.transporter.sendMail({
       ...mailConfig.default,
-      ...message,
+      ...message
     });
   }
 }
