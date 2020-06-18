@@ -1,5 +1,15 @@
 import { Op } from "sequelize";
 import * as Yup from "yup";
+import {
+  isAfter,
+  isBefore,
+  parseISO,
+  setSeconds,
+  setMinutes,
+  setHours,
+  startOfDay,
+  endOfDay
+} from "date-fns";
 
 import Delivery from "../models/Delivery";
 import Deliveryman from "../models/Deliveryman";
@@ -61,15 +71,15 @@ class DeliveryStatusController {
   }
 
   async update(req, res) {
-    // const schema = Yup.object().shape({
-    //   start_date: Yup.number(),
-    //   end_date: Yup.number(),
-    //   signature_id: Yup.string()
-    // });
+    const schema = Yup.object().shape({
+      start_date: Yup.date(),
+      end_date: Yup.date(),
+      signature_id: Yup.number()
+    });
 
-    // if (!(await schema.isValid(req.body))) {
-    //   return res.status(400).json({ error: "Validation fails" });
-    // }
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: "Validation fails" });
+    }
 
     const { deliveryman_id, delivery_id } = req.params;
 
@@ -89,6 +99,33 @@ class DeliveryStatusController {
       return res.status(400).json({
         error: "Delivery does not belongs to this deliveryman"
       });
+    }
+    const startDate = parseISO(req.body.start_date);
+    if (startDate) {
+      const startInterval = setSeconds(
+        setMinutes(setHours(startDate, 8), 0),
+        0
+      );
+      const endInterval = setSeconds(setMinutes(setHours(startDate, 18), 0), 0);
+
+      if (
+        isAfter(startDate, endInterval) ||
+        isBefore(startDate, startInterval)
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Orders pickup only between 08:00 and 18:00" });
+      }
+
+      const ordersPickupInDay = await Delivery.findAll({
+        where: {
+          deliveryman_id: { [Op.eq]: deliveryman_id },
+          start_date: {
+            [Op.between]: [startOfDay(startDate), endOfDay(startDate)]
+          }
+        }
+      });
+      console.log(ordersPickupInDay);
     }
 
     return res.json();
