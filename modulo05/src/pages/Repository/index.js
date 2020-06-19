@@ -1,44 +1,81 @@
 import React, { Component } from "react";
-import { FaGithubAlt, FaPlus } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
+import api from "../../services/api";
 
-export default class Main extends Component {
+import Container from "../../components/Container";
+import { Loading, Owner, IssueList } from "./styles";
+
+export default class Repository extends Component {
+  static propTypes = {
+    match: PropTypes.shape({
+      params: PropTypes.shape({
+        repository: PropTypes.string
+      })
+    }).isRequired
+  };
+
   state = {
-    newRepo: ""
+    repository: {},
+    issues: [],
+    loading: true
   };
 
-  handleInputChange = e => {
-    this.setState({ newRepo: e.target.value });
-    console.log(this.state.newRepo);
-  };
+  async componentDidMount() {
+    const { match } = this.props;
 
-  handleSubmit = e => {
-    e.preventDefault();
-    console.log(11111);
-  };
+    const repoName = decodeURIComponent(match.params.repository);
+
+    const [repository, issues] = await Promise.all([
+      api.get(`/repos/${repoName}`),
+      api.get(`/repos/${repoName}/issues`, {
+        params: {
+          state: "open",
+          per_page: 5
+        }
+      })
+    ]);
+
+    this.setState({
+      repository: repository.data,
+      issues: issues.data,
+      loading: false
+    });
+  }
 
   render() {
-    const { newRepo } = this.state;
+    const { repository, issues, loading } = this.state;
+
+    if (loading) {
+      return <Loading>Carregando</Loading>;
+    }
 
     return (
-      <div>
-        <h1>
-          <FaGithubAlt />
-          Repositórios {newRepo}
-        </h1>
+      <Container>
+        <Owner>
+          <Link to="/">Voltar aos repositórios</Link>
+          <img src={repository.owner.avatar_url} alt={repository.owner.login} />
+          <h1>{repository.name}</h1>
+          <p>{repository.description}</p>
+        </Owner>
 
-        <form onSubmit={this.handleSubmit}>
-          <input
-            type="text"
-            placeholder="Adicionar respositório"
-            value={newRepo}
-            onChange={this.handleInputChange}
-          />
-
-          <button type="submit" disabled>
-            <FaPlus color="#fff" size={14} />
-          </button>
-        </form>
-      </div>
+        <IssueList>
+          {issues.map(issue => (
+            <li key={String(issue.id)}>
+              <img src={issue.user.avatar_url} alt={issue.user.login} />
+              <div>
+                <strong>
+                  <a href={issue.html_url}>{issue.title}</a>
+                  {issue.labels.map(label => (
+                    <span key={String(label.id)}>{label.name}</span>
+                  ))}
+                </strong>
+                <p>{issue.user.login}</p>
+              </div>
+            </li>
+          ))}
+        </IssueList>
+      </Container>
     );
   }
 }
