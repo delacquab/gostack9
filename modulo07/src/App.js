@@ -1,5 +1,5 @@
 import React from "react";
-import { Router } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { ToastContainer } from "react-toastify";
 
@@ -15,12 +15,12 @@ import store from "./store";
 function App() {
   return (
     <Provider store={store}>
-      <Router history={history}>
+      <BrowserRouter>
         <Header />
         <Routes />
         <GlobalStyles />
         <ToastContainer autoClose={3000} />
-      </Router>
+      </BrowserRouter>
     </Provider>
   );
 }
