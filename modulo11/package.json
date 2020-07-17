@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "@sucrase/jest-plugin": "^2.0.0",
+    "@types/jest": "^26.0.4",
+    "jest": "^26.1.0",
+    "sequelize-cli": "^6.2.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "sequelize": "^6.3.3"
+  }
+}
